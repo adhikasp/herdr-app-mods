@@ -1,0 +1,12 @@
+{
+  "name": "herdr-app-mods",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mods for the Herdr desktop app: command bar, automatic tab titles, agent groups",
+  "scripts": {
+    "test": "node --test test/",
+    "check": "scripts/check"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# A stand-in agent for testing mods: reports status over OSC 7501 and sets the
+# terminal title, driven by lines on stdin ("title <text>", "state <word>", "exit").
+#   scripts/fake-agent [app-name]
+# Drive it from outside with: hc send <terminal> "title Fix login" (hc send needs the agent idle)
+app="${1:-fakeagent}"
+state() { printf '\033]7501;app=%s:state=%s\007' "$app" "$1"; }
+title() { printf '\033]0;%s\007' "$1"; }
+state idle
+while IFS= read -r line; do
+  # `hc send` wraps what it types in <hc from="...">...</hc>
+  line="${line#<hc from=*>}"; line="${line%</hc>}"
+  case "$line" in
+    "title "*) title "${line#title }" ;;
+    "state "*) state "${line#state }" ;;
+    exit) exit 0 ;;
+  esac
+done
