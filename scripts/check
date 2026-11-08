@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Load and render every mod once with `herdr-app check`, then run the unit tests.
+# Needs the Herdr app installed (it does not need a window).
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fail=0
+for dir in "$here"/mods/*/; do
+  herdr-app check "${dir%/}" || fail=1
+done
+node --test "$here/test/" || fail=1
+exit $fail

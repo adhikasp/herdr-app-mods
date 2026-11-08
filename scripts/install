@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Link (default) or copy the mods in this repo into the Herdr app's mods folder.
+#   scripts/install               link every mod (saves hot-reload in the app)
+#   scripts/install --copy        copy instead of linking
+#   scripts/install --uninstall   remove what this script installed
+#   scripts/install command-bar   only the named mods
+# The app home is $HERDR_APP_HOME, else ~/.config/herdr-app.
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+home="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
+mode=link
+names=()
+for arg in "$@"; do
+  case "$arg" in
+    --copy) mode=copy ;;
+    --uninstall) mode=uninstall ;;
+    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    -*) echo "unknown option: $arg" >&2; exit 2 ;;
+    *) names+=("$arg") ;;
+  esac
+done
+if [ ${#names[@]} -eq 0 ]; then
+  for dir in "$here"/mods/*/; do names+=("$(basename "$dir")"); done
+fi
+
+mkdir -p "$home/mods"
+for name in "${names[@]}"; do
+  src="$here/mods/$name"
+  dst="$home/mods/$name"
+  [ -d "$src" ] || { echo "no such mod: $name" >&2; exit 1; }
+  case "$mode" in
+    uninstall)
+      if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then rm "$dst"; echo "removed $name"
+      elif [ -d "$dst" ] && [ -f "$dst/.installed-by-herdr-app-mods" ]; then rm -rf "$dst"; echo "removed $name"
+      else echo "skip $name: not installed by this script"; fi ;;
+    link)
+      if [ -e "$dst" ] && [ ! -L "$dst" ]; then echo "skip $name: $dst exists and is not a link" >&2; continue; fi
+      ln -sfn "$src" "$dst"; echo "linked $name -> $src" ;;
+    copy)
+      if [ -e "$dst" ] && [ ! -L "$dst" ] && [ ! -f "$dst/.installed-by-herdr-app-mods" ]; then
+        echo "skip $name: $dst exists and was not installed by this script" >&2; continue
+      fi
+      rm -rf "$dst"; cp -r "$src" "$dst"; touch "$dst/.installed-by-herdr-app-mods"; echo "copied $name" ;;
+  esac
+done
+echo "Config goes in $home/config/<mod>.json (see README). Bind keys in $home/keys.json."
