@@ -277,7 +277,8 @@ export default class CommandBar extends View {
       )
       .child(
         rows.length === 0
-          ? div().h(ROW * 2).px(10).flex().items_center().text_color(t.dim).child(`No ${chip === "everything" ? "match" : chip} match “${this.result.rest}”`)
+          ? div().h(ROW * 2).px(10).flex().items_center().text_color(t.dim)
+              .child(this.result.kind === "all" ? `No matches for “${this.result.rest}”` : `No ${chip} match “${this.result.rest}”`)
           : v_flex().relative().h(height).flex_none().child(
               v_virtual_list(
                 "cb-list", rows.length, ROW, (i) => rows[i].item.id,

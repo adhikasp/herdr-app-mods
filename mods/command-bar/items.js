@@ -64,6 +64,26 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const NUMERIC_ARGS = new Set(["index", "lines", "pages", "px", "weight"]);
 const SKIP_COMMANDS = new Set(["app.reset", "window.close", "app.quit"]);
 
+/** Commands whose one required argument is a fixed pair: the palette lists each, bound or not. */
+const ARG_VALUES = { "pane.split": ["right", "down"] };
+
+/**
+ * A key binding's action as `{name, value}`. Two forms in keys.json:
+ * `"pane.split:right"`, and `{command: "pane.split", args: {direction: "right", argv: [...]}}`.
+ * The value is the command's first argument, the one the title shows.
+ */
+export function bindingAction(action, cmd) {
+  if (typeof action === "string") {
+    const i = action.indexOf(":");
+    return { name: i < 0 ? action : action.slice(0, i), value: i < 0 ? undefined : action.slice(i + 1) };
+  }
+  if (!action || typeof action.command !== "string") return null;
+  const first = cmd?.args?.[0]?.name;
+  const value = first ? action.args?.[first] : undefined;
+  const scalar = typeof value === "string" || typeof value === "number";
+  return { name: action.command, value: scalar ? String(value) : undefined };
+}
+
 /** `pane.split` + `right` → "Pane: split right". */
 export function commandTitle(name, value) {
   const [noun, ...verb] = name.split(".");
@@ -72,8 +92,9 @@ export function commandTitle(name, value) {
 }
 
 /**
- * Palette rows: every key binding that runs a command (with its keys), then
- * every other command that needs no argument, then one row per layout and theme.
+ * Palette rows: every key binding that runs a command (with its keys), then a
+ * command whose only argument is a fixed pair (`pane.split`), then every command
+ * that needs no argument, then one row per layout and theme.
  */
 export function commandRows({ commands = [], keys = [], layouts = [], themes = [] }) {
   const byName = new Map(commands.map((c) => [c.name, c]));
@@ -86,13 +107,17 @@ export function commandRows({ commands = [], keys = [], layouts = [], themes = [
   };
   const ordered = [...keys].sort((a, b) => (a.section === "global" ? 0 : 1) - (b.section === "global" ? 0 : 1));
   for (const k of ordered) {
-    if (typeof k.action !== "string" || k.action === "terminal" || k.action.startsWith("send:")) continue;
-    const i = k.action.indexOf(":");
-    const name = i < 0 ? k.action : k.action.slice(0, i);
-    const value = i < 0 ? undefined : k.action.slice(i + 1);
+    const name = typeof k.action === "string" ? k.action.split(":")[0] : k.action?.command;
+    if (typeof name !== "string" || name === "terminal" || name === "send") continue;
     const cmd = byName.get(name);
     if (!cmd || SKIP_COMMANDS.has(name)) continue;
-    add(name, value, [formatKeys(k.keys)], cmd.about);
+    const at = bindingAction(k.action, cmd);
+    add(at.name, at.value, [formatKeys(k.keys)], cmd.about);
+  }
+  for (const [name, values] of Object.entries(ARG_VALUES)) {
+    const cmd = byName.get(name);
+    if (!cmd || SKIP_COMMANDS.has(name)) continue;
+    for (const v of values) if (!rows.has(`${name}:${v}`)) add(name, v, [], cmd.about);
   }
   for (const c of commands) {
     if (SKIP_COMMANDS.has(c.name) || c.args.some((a) => a.required)) continue;

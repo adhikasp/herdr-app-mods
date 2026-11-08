@@ -90,6 +90,27 @@ test("commandRows: bindings first with keys, args-free extras, layouts and theme
   assert.equal(rows.some((r) => r.name === "mod.open"), false, "mod.open is not in this fixture's commands()");
 });
 
+test("commandRows: object-form bindings show their command and direction", () => {
+  const bound = [
+    { section: "global", keys: "ctrl-alt-v", action: { command: "pane.split", args: { direction: "right", argv: ["claude"] } } },
+    { section: "global", keys: "ctrl-alt-s", action: { command: "pane.split", args: { direction: "down", argv: ["claude"] } } },
+    { section: "global", keys: "ctrl-shift-w", action: { command: "tab.close", args: { confirmed: true } } },
+  ];
+  const rows = commandRows({ ...data, keys: bound });
+  const by = (t) => rows.find((r) => r.title === t);
+  assert.deepEqual(by("Pane: split right").hotkeys, ["Ctrl+Alt+V"]);
+  assert.deepEqual(by("Pane: split down").hotkeys, ["Ctrl+Alt+S"]);
+  assert.deepEqual(by("Tab: close").hotkeys, ["Ctrl+Shift+W"]);
+  assert.deepEqual(commandArgs(commands, "pane.split", "right"), { direction: "right" }, "the bar runs the direction, not the binding's argv");
+});
+
+test("commandRows: pane.split right and down are listed even with no binding", () => {
+  const rows = commandRows({ ...data, keys: [] });
+  const by = (t) => rows.find((r) => r.title === t);
+  assert.deepEqual(by("Pane: split right").hotkeys, []);
+  assert.deepEqual(by("Pane: split down").hotkeys, []);
+});
+
 test("commandArgs: value fills the first argument; indexes become numbers", () => {
   assert.deepEqual(commandArgs(commands, "space.select", "3"), { index: 3 });
   assert.deepEqual(commandArgs(commands, "pane.split", "right"), { direction: "right" });

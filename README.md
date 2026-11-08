@@ -54,7 +54,11 @@ ctrl+d twice  close the selected row's tab; ctrl+r renames it
 At rest the list is: agents that need you, then finished ones, then recents, then the rest; the place you
 are in never comes first. Enter on a space shows it, on an agent focuses it, on a machine starts a space there,
 on a command runs it. Palette rows come from `commands()` and `keys()`, so they always match your bindings;
-layouts and themes are listed too (`Layout: switch main`, `Theme: app.theme …`).
+layouts and themes are listed too (`Layout: switch main`, `Theme: app.theme …`). A key written as
+`{command, args}` is listed under the value of the command's first argument, so a split bound with a direction
+and an agent shows as `Pane: split right` with its key; `Pane: split right` and `Pane: split down` are listed
+even when nothing is bound to them. Enter fills only that first argument, so a palette split gives you a shell,
+not the agent your key starts.
 
 `config/command-bar.json`:
 
