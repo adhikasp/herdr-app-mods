@@ -16,6 +16,8 @@ Five small mods, MIT licensed, no build step, no dependencies. Install them with
 | 🧹 | [`idle-reaper`](#idle-reaper) | **Agents that clean up after themselves.** Idle for hours? Parked, with the resume command already typed. Forgotten for days? Closed. |
 | 🪛 | [`tab-tools`](#tab-tools) | **The small stuff the app has no setting for.** Hide the tab bar on one-tab spaces, move tabs by key, open the worktree dialogs. |
 
+![Command bar open over a window of agents](herdr-mods/command-bar/preview.png)
+
 ## Try it in 60 seconds
 
 ```sh
@@ -61,6 +63,8 @@ else (a dotfiles repo, say).
 
 ### command-bar
 
+![The command bar: one search box over every space, tab, agent and command](herdr-mods/command-bar/preview.png)
+
 Stop hunting through spaces and tabs. One fuzzy box reaches all of it:
 
 ```
@@ -96,6 +100,8 @@ starts.
 </details>
 
 ### tab-titles
+
+![Tabs named after the work their agents are doing](herdr-mods/tab-titles/preview.png)
 
 The agent's own task title becomes the tab name, so the tab bar, the sidebar and the command bar show the *work*
 instead of a number. Works with whatever sets a terminal title: Claude Code, OpenCode, Codex.
@@ -146,12 +152,16 @@ copy acts at a time.
 
 ### agent-groups
 
+![Agent groups: Needs you, Working, Idle in one keyboard-driven popup](herdr-mods/agent-groups/preview.png)
+
 The sidebar already has a priority view; this is the same idea as a popup you drive without the mouse: **Needs you**,
 **Working**, **Done**, **Idle**, each sorted by when the agent last changed. `j`/`k` move, `enter` (or a click)
 focuses, `p` pins, `esc` or `q` closes. Pins lead their group. It reads herdr-core's status timestamps, not
 transcripts, so it never touches your files.
 
 ### idle-reaper
+
+![A parked agent: the shell with its resume command typed, not run](herdr-mods/idle-reaper/preview.png)
 
 Ten agents, three of them idle since lunch. The reaper looks every ten minutes and does two things:
 
@@ -213,6 +223,8 @@ lines.
 </details>
 
 ### tab-tools
+
+![A one-tab space with the tab bar hidden](herdr-mods/tab-tools/preview.png)
 
 The things the app has no setting for. It draws nothing.
 
