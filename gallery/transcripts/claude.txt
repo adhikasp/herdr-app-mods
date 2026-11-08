@@ -1,0 +1,13 @@
+
+  ● Reading src/auth/session.ts and the failing test.
+
+  ● Update(src/auth/session.ts)
+    ⎿  Added a lock around refreshToken() so two tabs
+       cannot rotate the same token at once.
+
+  ● Bash(npm test -- session)
+    ⎿  PASS  src/auth/session.test.ts
+       ✓ refreshes once when two requests race (41 ms)
+       ✓ keeps the old token valid for 5 s (12 ms)
+
+  ✻ Running the full suite…

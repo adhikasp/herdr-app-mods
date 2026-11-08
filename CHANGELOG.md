@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Gallery layout: each mod moved to `herdr-mods/<name>/mods/<name>/` with a `RECIPE.md` and a `preview.png`, so the repo
+  lists on herdr.dev/gallery. `scripts/gallery` regenerates the previews from synthetic data on an isolated Herdr.
 - `idle-reaper` on macOS: the shell's folder is found with `lsof` when there is no `/proc` (shared by the mod and
   the script); `scripts/idle-reaper` adds `~/.local/bin` (`HC_INSTALL_DIR`), Homebrew and `/usr/sbin` to a bare
   `PATH`, so it runs under launchd and cron; the app home honours `XDG_CONFIG_HOME` (also in `scripts/install`).

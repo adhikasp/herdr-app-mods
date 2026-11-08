@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { matchText, matchFields, prepare, splitQuery, term } from "../mods/command-bar/fuzzy.js";
+import { matchText, matchFields, prepare, splitQuery, term } from "../herdr-mods/command-bar/mods/command-bar/fuzzy.js";
 
 test("splitQuery keeps quoted phrases together", () => {
   assert.deepEqual(splitQuery("tri  work"), ["tri", "work"]);

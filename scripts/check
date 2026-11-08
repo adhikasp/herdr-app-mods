@@ -4,7 +4,7 @@
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fail=0
-for dir in "$here"/mods/*/; do
+for dir in "$here"/herdr-mods/*/mods/*/; do
   herdr-app check "${dir%/}" || fail=1
 done
 "$here"/scripts/sync-shared --check || fail=1

@@ -1,0 +1,9 @@
+
+  Add per-key rate limiting to the public API.
+
+  I plan to add a token bucket in middleware/rate-limit.ts and
+  store counters in Redis.
+
+  ┃ Permission required
+  ┃ Run `redis-cli -h cache.internal ping`
+  ┃   Allow once    Allow always    Reject

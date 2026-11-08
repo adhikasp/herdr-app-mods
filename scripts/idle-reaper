@@ -9,9 +9,9 @@ import { execFile } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { configPath, mergeConfig } from "../mods/idle-reaper/config.js";
-import { DEFAULTS } from "../mods/idle-reaper/reaper.js";
-import { augmentPath, makeCwdOf, run } from "../mods/idle-reaper/runner.js";
+import { configPath, mergeConfig } from "../herdr-mods/idle-reaper/mods/idle-reaper/config.js";
+import { DEFAULTS } from "../herdr-mods/idle-reaper/mods/idle-reaper/reaper.js";
+import { augmentPath, makeCwdOf, run } from "../herdr-mods/idle-reaper/mods/idle-reaper/runner.js";
 
 const args = new Set(process.argv.slice(2));
 const home = homedir();

@@ -232,7 +232,7 @@ Mods are trusted code with command and network access, so here is exactly what t
 - `tab-titles` runs `printenv` to find a token you pointed it at, renames tabs, and makes one HTTPS request to the
   endpoint you configured, *only* if you turn on `multi_agent_titles`.
 - `idle-reaper` runs `hc` to read terminals and, outside `dry_run`, to exit, close and type into **idle** agent panes.
-  That is the one mod that acts on your terminals; read `mods/idle-reaper/reaper.js` first, it is the whole policy.
+  That is the one mod that acts on your terminals; read `herdr-mods/idle-reaper/mods/idle-reaper/reaper.js` first, it is the whole policy.
 - `tab-tools` runs layout and tab commands.
 
 Nothing else leaves your machine. No telemetry, no accounts.
@@ -252,7 +252,13 @@ Nothing else leaves your machine. No telemetry, no accounts.
 npm test            # fuzzy matching, ranking, titling rules, grouping, the reaper's policy and runner
 scripts/check       # herdr-app check on every mod, then the tests
 scripts/sync-shared # copy shared/*.js into the mods that use them
+scripts/gallery     # redraw herdr-mods/*/preview.png from synthetic data (Hyprland; own app home and core)
 ```
+
+Each mod lives in `herdr-mods/<name>/` the way the [Herdr gallery](https://herdr.dev/gallery/?type=mods) expects:
+`mods/<name>/` (the mod), a `RECIPE.md` (a brief another agent can rebuild it from) and a `preview.png`. The previews
+are screenshots of an isolated Herdr fed with made-up spaces and agents (`scripts/gallery`, `gallery/`), never of a
+real desktop.
 
 Developed and used daily on Linux. The mods are plain JavaScript on the app's mod API. `idle-reaper` has been
 reviewed for macOS (see above) and its macOS paths are covered by tests with a faked system, but it has not been run

@@ -21,12 +21,12 @@ for arg in "$@"; do
   esac
 done
 if [ ${#names[@]} -eq 0 ]; then
-  for dir in "$here"/mods/*/; do names+=("$(basename "$dir")"); done
+  for dir in "$here"/herdr-mods/*/mods/*/; do names+=("$(basename "$dir")"); done
 fi
 
 mkdir -p "$home/mods"
 for name in "${names[@]}"; do
-  src="$here/mods/$name"
+  src="$here/herdr-mods/$name/mods/$name"
   dst="$home/mods/$name"
   [ -d "$src" ] || { echo "no such mod: $name" >&2; exit 1; }
   case "$mode" in

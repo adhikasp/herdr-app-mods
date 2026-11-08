@@ -1,0 +1,7 @@
+
+  › Port the checkout page to Tailwind 4
+
+  • Replaced 14 @apply blocks with theme variables.
+  • Updated tailwind.config.ts → @theme in app.css.
+
+  Done. 31 files changed, build passes.

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GROUPS, ago, build, cleanTitle, rows } from "../mods/agent-groups/groups.js";
+import { GROUPS, ago, build, cleanTitle, rows } from "../herdr-mods/agent-groups/mods/agent-groups/groups.js";
 
 const prog = { key: "claude", name: "Claude Code", icon: null };
 const agent = (address, tab, status, title, extra = {}) => ({ address, tab, space_name: "api", status, title, seq: 1, program: prog, pinned: false, focused: false, ...extra });

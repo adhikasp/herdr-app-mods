@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# A scripted stand-in agent for gallery screenshots: sets the terminal title, reports a status over OSC 7501,
+# prints a canned transcript from a file, then idles forever. Used only by scripts/gallery.
+#   scripts/gallery-agent <app> <state> <title> [transcript-file]
+app="$1"; state="$2"; title="$3"; file="${4:-}"
+printf '\033]0;%s\007' "$title"
+printf '\033]7501;app=%s:state=%s\007' "$app" "$state"
+[ -n "$file" ] && [ -f "$file" ] && cat "$file"
+trap 'exit 0' TERM INT
+while :; do sleep 3600 & wait $!; done

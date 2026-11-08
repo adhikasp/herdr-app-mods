@@ -10,12 +10,12 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 test("every copy of a shared file equals shared/", () => {
   const shared = readdirSync(join(root, "shared")).filter((f) => f.endsWith(".js"));
   let copies = 0;
-  for (const mod of readdirSync(join(root, "mods"))) {
+  for (const mod of readdirSync(join(root, "herdr-mods"))) {
     for (const f of shared) {
-      const copy = join(root, "mods", mod, f);
+      const copy = join(root, "herdr-mods", mod, "mods", mod, f);
       if (!existsSync(copy)) continue;
       copies++;
-      assert.equal(readFileSync(copy, "utf8"), readFileSync(join(root, "shared", f), "utf8"), `mods/${mod}/${f} drifted: run scripts/sync-shared`);
+      assert.equal(readFileSync(copy, "utf8"), readFileSync(join(root, "shared", f), "utf8"), `herdr-mods/${mod}/mods/${mod}/${f} drifted: run scripts/sync-shared`);
     }
   }
   assert.ok(copies > 0);

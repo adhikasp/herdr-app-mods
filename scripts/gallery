@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Regenerate herdr-mods/<mod>/preview.png from synthetic data, on an isolated Herdr (own app home, own herdr-core
+# session, own headless Hyprland output), so nothing on your real desktop or sessions is touched or shown.
+#   scripts/gallery            up + seed + shoot every mod + down
+#   scripts/gallery up|seed|shoot [mod...]|down     the same, step by step (keep it up to poke at it)
+# Needs Hyprland (hyprctl eval, headless output), herdr-app, jq, ImageMagick. Everything shown is made up here:
+# the spaces, agents and transcripts below and in gallery/transcripts/.
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export HERDR_APP_HOME="${XDG_RUNTIME_DIR:-/tmp}/herdr-gallery" HC_SESSION=gal HERDR_APP_ID=herdr-gallery HERDR_TELEMETRY=0
+unset HC_TERMINAL_SOCKET HC_TERMINAL_ID HC_SOCKET
+work=/tmp/gallery                       # fake project folders the synthetic terminals start in
+agent="$here/scripts/gallery-agent"; tr="$here/gallery/transcripts"
+do_() { herdr-app do "$@"; }
+hypr() { hyprctl eval "$1" >/dev/null; }
+shot_dir="$here/herdr-mods"
+
+up() {
+  if ! hyprctl monitors -j | jq -e '.[]|select(.name=="GALLERY")' >/dev/null; then hyprctl output create headless GALLERY >/dev/null; fi
+  hypr 'hl.monitor({ output = "GALLERY", mode = "3840x2160@60", position = "auto-right", scale = 2 })'
+  hypr 'hl.workspace_rule({ workspace = "9", monitor = "GALLERY" })'
+  hypr 'hl.window_rule({ match = { class = "^herdr-gallery$" }, workspace = "9 silent", float = true, size = "1500 900", move = "100 90" })'
+  rm -rf "$HERDR_APP_HOME"; mkdir -p "$HERDR_APP_HOME/config" "$work"
+  echo '{"frame.welcomed":"skipped","workspace.panels":[]}' > "$HERDR_APP_HOME/shared.json"   # no first-run dialog
+  echo "{\"last_run\":\"$(herdr-app --version | awk '{print $2}')\",\"presented\":[\"$(herdr-app --version | awk '{print $2}')\"]}" > "$HERDR_APP_HOME/update-notes.json"   # no "Updated to" toast
+  hyprctl eval "hl.exec_cmd('env HC_SESSION=$HC_SESSION HERDR_APP_HOME=$HERDR_APP_HOME HERDR_APP_ID=$HERDR_APP_ID HERDR_TELEMETRY=0 herdr-app')" >/dev/null
+  for _ in $(seq 40); do herdr-app status >/dev/null 2>&1 && break; sleep 0.5; done
+  # the app seeds its own files on first start; now add the mods, a layout with the background ones, config, keys
+  "$here/scripts/install" --copy >/dev/null
+  jq '.children += [
+        {"id":"tab-titles","type":"block","size":{"px":0},"content":{"mod":"tab-titles"}},
+        {"id":"idle-reaper","type":"block","size":{"px":0},"content":{"mod":"idle-reaper"}},
+        {"id":"tab-tools","type":"block","size":{"px":0},"content":{"mod":"tab-tools"}}]' \
+     "$HERDR_APP_HOME/layouts/main.json" > "$HERDR_APP_HOME/layouts/gallery.json"
+  echo '{ "settle_ms": 1000 }'            > "$HERDR_APP_HOME/config/tab-titles.json"
+  echo '{ "hide_bar_when_single_tab": true }' > "$HERDR_APP_HOME/config/tab-tools.json"
+  echo '{ "dry_run": true }'              > "$HERDR_APP_HOME/config/idle-reaper.json"
+  jq '.zoom=1.15 | .sounds.enabled=false' "$HERDR_APP_HOME/settings.json" > "$HERDR_APP_HOME/settings.tmp" 2>/dev/null \
+    && mv "$HERDR_APP_HOME/settings.tmp" "$HERDR_APP_HOME/settings.json" || true
+  # a window on a workspace nobody is looking at gets no frame callbacks, so show workspace 9 on the headless output
+  # without taking keyboard focus from wherever you are
+  local prev; prev=$(hyprctl activewindow -j 2>/dev/null | jq -r '.address // empty')
+  hyprctl dispatch 'hl.dsp.focus({ workspace = "9" })' >/dev/null
+  [ -z "$prev" ] || hyprctl dispatch "hl.dsp.focus({ window = 'address:$prev' })" >/dev/null
+  sleep 2; do_ layout.switch --name gallery >/dev/null
+}
+
+overlay_close() { do_ overlay.close >/dev/null 2>&1 || true; }
+space_id() { do_ ls >/dev/null; herdr-app ls | jq -r --arg n "$1" '.spaces[]|select(.name==$n)|.id'; }
+
+# name state folder title transcript
+spawn() { # space tab-name app state title transcript
+  local space="$1" tab="$2" app="$3" state="$4" title="$5" file="$6"
+  local argv; argv=$(jq -nc --arg a "$agent" --arg app "$app" --arg s "$state" --arg t "$title" --arg f "$tr/$file" '[$a,$app,$s,$t,$f]')
+  if [ "$tab" = "-" ]; then do_ tab.new --space "$space" --folder "$work/$7" --argv "$argv" >/dev/null
+  else do_ tab.new --space "$space" --name "$tab" --folder "$work/$7" --argv "$argv" >/dev/null; fi
+}
+
+seed() {
+  mkdir -p "$work"/{acme-api,storefront,infra,docs-site}
+  local s
+  s=$(do_ space.new --name acme-api --folder "$work/acme-api" --argv "$(jq -nc --arg a "$agent" --arg f "$tr/claude.txt" '[$a,"claude-code","working","Fix login race condition",$f]')" | jq -r '.space')
+  spawn "$s" -  opencode blocked "Add per-key rate limiting"   opencode.txt acme-api
+  spawn "$s" -  claude-code done  "Bump axios to 1.7"          claude.txt   acme-api
+  s=$(do_ space.new --name storefront --folder "$work/storefront" --argv "$(jq -nc --arg a "$agent" --arg f "$tr/codex.txt" '[$a,"codex","idle","Port checkout to Tailwind 4",$f]')" | jq -r '.space')
+  spawn "$s" -  claude-code working "Fix flaky cart e2e test"  claude.txt   storefront
+  s=$(do_ space.new --name infra --folder "$work/infra" --argv "$(jq -nc --arg a "$agent" --arg f "$tr/claude.txt" '[$a,"claude-code","idle","Terraform drift report",$f]')" | jq -r '.space')
+  # a parked agent, the way idle-reaper leaves one: a plain shell with the resume command typed, not run
+  s=$(do_ space.new --name docs-site --folder "$work/docs-site" --tab "docs build (parked)" --argv '["bash","-c","printf \"\\033]0;docs build\\007\"; read -e -i \"claude --resume 7f3a9c21\" -p \"$ \"; sleep 3600"]' | jq -r '.space')
+  sleep 12   # let the "needs you" toast go
+}
+
+# the finished frame: one popup open, or none
+frame() { sleep 1.5; herdr-app shot "$1" >/dev/null; magick "$1" -resize 2400x "$1"; echo "wrote $1"; }
+
+shoot() {
+  local mods=("$@"); [ ${#mods[@]} -gt 0 ] || mods=(command-bar agent-groups tab-titles idle-reaper tab-tools)
+  local m
+  for m in "${mods[@]}"; do shoot_"${m//-/_}"; done
+}
+shoot_command_bar()  { do_ space.select --id "$(space_id acme-api)" >/dev/null; do_ mod.open --name command-bar >/dev/null; frame "$shot_dir/command-bar/preview.png"; overlay_close; }
+shoot_agent_groups() { do_ space.select --id "$(space_id acme-api)" >/dev/null; do_ mod.open --name agent-groups >/dev/null; frame "$shot_dir/agent-groups/preview.png"; overlay_close; }
+shoot_tab_titles()   { do_ space.select --id "$(space_id acme-api)" >/dev/null; frame "$shot_dir/tab-titles/preview.png"; }
+shoot_idle_reaper()  { do_ space.select --id "$(space_id docs-site)" >/dev/null; frame "$shot_dir/idle-reaper/preview.png"; }
+shoot_tab_tools()    { do_ space.select --id "$(space_id infra)" >/dev/null; frame "$shot_dir/tab-tools/preview.png"; }
+
+down() {
+  do_ app.quit >/dev/null 2>&1 || true; sleep 1
+  for t in $(hc ls --all | jq -r '.terminals[].address' 2>/dev/null); do hc kill "$t" >/dev/null 2>&1 || true; hc rm "$t" >/dev/null 2>&1 || true; done
+  hc server stop >/dev/null 2>&1 || true
+  rm -rf "$HERDR_APP_HOME" "$work"
+  hyprctl output remove GALLERY >/dev/null 2>&1 || true
+}
+
+case "${1:-all}" in
+  up) up ;; seed) seed ;; shoot) shift; shoot "$@" ;; down) down ;;
+  all) trap down EXIT; up; seed; shoot ;;
+  *) sed -n 2,6p "$0"; exit 2 ;;
+esac

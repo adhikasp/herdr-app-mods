@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULTS, cleanTitle, formatTitle, parseEnvKey, parseReply, plan, requestBody, spaceAllowed } from "../mods/tab-titles/titles.js";
+import { DEFAULTS, cleanTitle, formatTitle, parseEnvKey, parseReply, plan, requestBody, spaceAllowed } from "../herdr-mods/tab-titles/mods/tab-titles/titles.js";
 
 const prog = { key: "claude", name: "Claude Code" };
 const tab = (id, name, named) => ({ id, name, named });

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildItems, cleanTitle, commandArgs, commandRows, commandTitle, formatKeys, parseQuery, restingOrder, search,
-} from "../mods/command-bar/items.js";
+} from "../herdr-mods/command-bar/mods/command-bar/items.js";
 
 const prog = (key, name) => ({ key, name, icon: null, tint: false, tile: null, color: null, shell: false, agent: true });
 const tab = (id, name, extra = {}) => ({ id, index: 1, name, named: !/^\d+$/.test(name), active: false, status: null, panes: 1, zoomed: false, settled: false, ...extra });

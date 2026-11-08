@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULTS, appFor, plan, typable, resumeCommand } from "../mods/idle-reaper/reaper.js";
-import { augmentPath, makeCwdOf, parseLsofCwd, run, samePath } from "../mods/idle-reaper/runner.js";
+import { DEFAULTS, appFor, plan, typable, resumeCommand } from "../herdr-mods/idle-reaper/mods/idle-reaper/reaper.js";
+import { augmentPath, makeCwdOf, parseLsofCwd, run, samePath } from "../herdr-mods/idle-reaper/mods/idle-reaper/runner.js";
 import { Lease } from "../shared/lease.js";
-import { barCommand, findNode, moveTab, parseCommand } from "../mods/tab-tools/tools.js";
+import { barCommand, findNode, moveTab, parseCommand } from "../herdr-mods/tab-tools/mods/tab-tools/tools.js";
 
 const H = 3600;
 const NOW = 1_000_000;

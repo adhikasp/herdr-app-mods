@@ -11,10 +11,10 @@ status=0
 # mod:file pairs, one per line. Add a line when a mod starts using a shared file.
 while read -r mod file; do
   [ -n "$mod" ] || continue
-  src="$here/shared/$file"; dst="$here/mods/$mod/$file"
+  src="$here/shared/$file"; dst="$here/herdr-mods/$mod/mods/$mod/$file"
   if [ ! -f "$dst" ] || ! cmp -s "$src" "$dst"; then
-    if [ "$check" = 1 ]; then echo "drift: mods/$mod/$file"; status=1
-    else cp "$src" "$dst"; echo "synced mods/$mod/$file"; fi
+    if [ "$check" = 1 ]; then echo "drift: herdr-mods/$mod/$file"; status=1
+    else cp "$src" "$dst"; echo "synced herdr-mods/$mod/$file"; fi
   fi
 done <<'EOF'
 tab-titles llm.js
