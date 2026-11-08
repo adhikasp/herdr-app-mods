@@ -9,17 +9,17 @@ test("splitQuery keeps quoted phrases together", () => {
 });
 
 test("subsequence match, positions point at the matched characters", () => {
-  const m = matchText("pilf", "pi-life");
+  const m = matchText("mylf", "my-life");
   assert.ok(m);
   assert.deepEqual(m.positions, [0, 1, 3, 5]);
-  assert.equal(matchText("xyz", "pi-life"), null);
+  assert.equal(matchText("xyz", "my-life"), null);
   assert.equal(matchText("life", ""), null);
 });
 
 test("smart case: lowercase ignores case, an uppercase letter is exact", () => {
-  assert.ok(matchText("pilife", "PI-Life"));
-  assert.equal(matchText("PI", "pi-life"), null);
-  assert.ok(matchText("PI", "PI-life"));
+  assert.ok(matchText("mylife", "MY-Life"));
+  assert.equal(matchText("MY", "my-life"), null);
+  assert.ok(matchText("MY", "MY-life"));
 });
 
 test("word boundaries and runs beat scattered matches", () => {
@@ -50,9 +50,9 @@ test("unicode text keeps positions in code points", () => {
 test("matchFields ANDs terms across fields and weights the title", () => {
   const fields = [
     { prepared: prepare("fix login"), weight: 1 },
-    { prepared: prepare("pi-life main"), weight: 0.5 },
+    { prepared: prepare("my-life main"), weight: 0.5 },
   ];
-  const hit = matchFields([term("fix"), term("pilf")], fields);
+  const hit = matchFields([term("fix"), term("mylf")], fields);
   assert.ok(hit);
   assert.deepEqual(hit.positions[0], [0, 1, 2]);
   assert.deepEqual(hit.positions[1], [0, 1, 3, 5]);

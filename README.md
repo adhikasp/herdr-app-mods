@@ -43,7 +43,7 @@ Settings live in `config/<mod>.json` inside the app home (`~/.config/herdr-app/c
 ```
 type          fuzzy search; space separates terms, all must match; smart case
 s a t p m c   (then a space or colon) keep the search to spaces / agents / tabs / panes / machines /
-              commands: `s pilf`, `a:claude`. A prefix that matches nothing searches everything.
+              commands: `s web`, `a:claude`. A prefix that matches nothing searches everything.
 > or :        the command palette: every command and key binding, with its keys
 @  %  !       agents / named terminals / only what needs you
 up, down      move (ctrl+n/p, ctrl+j/k too); tab and shift+tab cycle the kind

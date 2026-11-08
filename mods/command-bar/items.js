@@ -28,7 +28,7 @@ export const KIND_LABEL = {
 /**
  * Split a raw query into a kind and the text to match.
  * `>` or `:` first means commands; `@` agents; `%` panes; `!` what needs you.
- * `s pilf`, `s:pilf` and `space: pilf` mean "spaces matching pilf". A lone `s`
+ * `s web`, `s:web` and `space: web` mean "spaces matching web". A lone `s`
  * with nothing after it is still a search for an s.
  */
 export function parseQuery(raw) {

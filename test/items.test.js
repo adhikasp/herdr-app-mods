@@ -13,12 +13,12 @@ const agent = (address, tabId, spaceId, spaceName, status, title, seq, extra = {
 });
 
 const spaces = [
-  space("s1", "pi-life", [tab("t1", "1", { active: true, status: "working" }), tab("t2", "notes")], { active: true, status: "working" }),
+  space("s1", "my-life", [tab("t1", "1", { active: true, status: "working" }), tab("t2", "notes")], { active: true, status: "working" }),
   space("s2", "api", [tab("t3", "fix login", { status: "blocked" }), tab("t4", "3", { status: "done" })], { status: "blocked", branch: "main" }),
   space("s3", "vps-box", [tab("t5", "1")], { machine: "vps" }),
 ];
 const agents = [
-  agent("t1", "t1", "s1", "pi-life", "working", "✳ Assistant overview", 9, { focused: true }),
+  agent("t1", "t1", "s1", "my-life", "working", "✳ Assistant overview", 9, { focused: true }),
   agent("t7", "t3", "s2", "api", "blocked", "✳ Rotate API keys", 5),
   agent("t8", "t4", "s2", "api", "done", "✳ Write release notes", 7),
 ];
@@ -42,7 +42,7 @@ const keys = [
   { section: "global", keys: "alt-o", action: "mod.open:command-bar" },
 ];
 const data = {
-  spaces, agents, commands, keys, layouts: ["main", "semar"], themes: [{ name: "atom-one-dark" }],
+  spaces, agents, commands, keys, layouts: ["main", "work"], themes: [{ name: "atom-one-dark" }],
   machines: [{ name: null, layout: "ready" }, { name: "vps", layout: "ready" }],
   terminals: [
     { address: "t1", state: "live", name: null, title: "x", labels: {} },
@@ -56,9 +56,9 @@ const items = buildItems(data);
 const ids = (r) => r.rows.map((x) => x.item.id);
 
 test("parseQuery: kind prefixes, sigils, plain words", () => {
-  assert.deepEqual(parseQuery("s pilf"), { kind: "space", rest: "pilf", prefixed: true });
-  assert.deepEqual(parseQuery("s:pilf"), { kind: "space", rest: "pilf", prefixed: true });
-  assert.deepEqual(parseQuery("space: pilf"), { kind: "space", rest: "pilf", prefixed: true });
+  assert.deepEqual(parseQuery("s mylf"), { kind: "space", rest: "mylf", prefixed: true });
+  assert.deepEqual(parseQuery("s:mylf"), { kind: "space", rest: "mylf", prefixed: true });
+  assert.deepEqual(parseQuery("space: mylf"), { kind: "space", rest: "mylf", prefixed: true });
   assert.deepEqual(parseQuery("> split"), { kind: "command", rest: "split", prefixed: true });
   assert.deepEqual(parseQuery(":split"), { kind: "command", rest: "split", prefixed: true });
   assert.deepEqual(parseQuery("@ claude"), { kind: "agent", rest: "claude", prefixed: true });
@@ -85,7 +85,7 @@ test("commandRows: bindings first with keys, args-free extras, layouts and theme
   assert.equal(by("Pane: split"), undefined, "required argument and no value");
   assert.equal(by("App: reset"), undefined);
   assert.equal(by("Space: move"), undefined);
-  assert.ok(by("Layout: switch semar"));
+  assert.ok(by("Layout: switch work"));
   assert.ok(by("Theme: atom-one-dark") === undefined && by("App: theme atom-one-dark"));
   assert.equal(rows.some((r) => r.name === "mod.open"), false, "mod.open is not in this fixture's commands()");
 });
@@ -93,7 +93,7 @@ test("commandRows: bindings first with keys, args-free extras, layouts and theme
 test("commandArgs: value fills the first argument; indexes become numbers", () => {
   assert.deepEqual(commandArgs(commands, "space.select", "3"), { index: 3 });
   assert.deepEqual(commandArgs(commands, "pane.split", "right"), { direction: "right" });
-  assert.deepEqual(commandArgs(commands, "layout.switch", "semar"), { name: "semar" });
+  assert.deepEqual(commandArgs(commands, "layout.switch", "work"), { name: "work" });
   assert.deepEqual(commandArgs(commands, "tab.new", undefined), {});
 });
 
@@ -127,8 +127,8 @@ test("restingOrder: needs you, then done, then recents, current never first, com
   assert.ok(order.indexOf("space:s1") > order.indexOf("agent:t1"), "spaces after work");
 });
 
-test("search: space prefix finds the pi-life space", () => {
-  const r = search(items, "s pilf");
+test("search: space prefix finds the my-life space", () => {
+  const r = search(items, "s mylf");
   assert.equal(r.kind, "space");
   assert.equal(r.rows[0].item.id, "space:s1");
   assert.deepEqual(r.rows[0].positions[0], [0, 1, 3, 5]);

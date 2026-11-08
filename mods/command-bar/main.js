@@ -4,7 +4,7 @@
 //
 //   type          fuzzy search; space separates terms, all must match
 //   s a t p m c   (then space or colon) keep the search to spaces / agents / tabs /
-//                 panes / machines / commands: `s pilf`, `a:claude`
+//                 panes / machines / commands: `s web`, `a:claude`
 //   > or :        the command palette, with each command's key
 //   @ % !         agents / panes / only what needs you
 //   up/down       move (also ctrl+n/p, ctrl+j/k); tab / shift+tab cycles the kind
