@@ -110,7 +110,7 @@ behaviour, so there is no read marker to keep.
 ## Development
 
 ```sh
-npm test            # node --test test/: fuzzy matching, ranking, titling rules, grouping
+npm test            # node --test test/*.test.js: fuzzy matching, ranking, titling rules, grouping
 scripts/check       # herdr-app check on every mod, then the tests
 scripts/fake-agent  # a stand-in agent (OSC 7501 status + terminal title) for trying mods
 ```

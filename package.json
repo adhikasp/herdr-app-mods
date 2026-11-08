@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Mods for the Herdr desktop app: command bar, automatic tab titles, agent groups",
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test test/*.test.js",
     "check": "scripts/check"
   },
   "license": "MIT"

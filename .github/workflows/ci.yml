@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: 22
       # Pure logic only. `herdr-app check` needs the app, so run scripts/check locally.
-      - run: node --test test/
+      - run: node --test test/*.test.js
