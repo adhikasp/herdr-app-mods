@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Mods for the Herdr desktop app: command bar, automatic tab titles, agent groups",
+  "description": "Mods for the Herdr desktop app: command bar, automatic tab titles, agent groups, idle reaper, tab tools",
   "scripts": {
     "test": "node --test test/*.test.js",
     "check": "scripts/check"

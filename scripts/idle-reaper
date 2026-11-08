@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+// Run idle-reaper from a timer, for when the Herdr window is closed (a mod only runs while it is open).
+//   scripts/idle-reaper               one pass; does nothing while a window is up (the mod acts then)
+//   scripts/idle-reaper --force       one pass even with a window up
+//   scripts/idle-reaper --dry-run     log what would happen, change nothing
+// Settings: config/idle-reaper.json in the app home ($HERDR_APP_HOME, else ~/.config/herdr-app), the same file the
+// mod reads. State: idle-reaper-state.json beside it, shared with the mod.
+import { execFile } from "node:child_process";
+import { readFile, writeFile, mkdir, readlink } from "node:fs/promises";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { configPath, mergeConfig } from "../mods/idle-reaper/config.js";
+import { DEFAULTS } from "../mods/idle-reaper/reaper.js";
+import { run } from "../mods/idle-reaper/runner.js";
+
+const args = new Set(process.argv.slice(2));
+const home = homedir();
+const appHome = process.env.HERDR_APP_HOME || join(home, ".config/herdr-app");
+const env = { ...process.env };
+delete env.HC_TERMINAL_ID; // hc would wrap what it types in <hc from="..."> tags when the caller is a terminal
+
+const exec = (cmd, argv, timeout = 30000) =>
+  new Promise((resolve) => {
+    execFile(cmd, argv, { env, timeout, maxBuffer: 8 << 20 }, (err, stdout) => resolve({ code: err ? (typeof err.code === "number" ? err.code : -1) : 0, stdout: String(stdout ?? "") }));
+  });
+const readText = (p) => readFile(p, "utf8").catch(() => null);
+const pad = (n) => String(n).padStart(2, "0");
+const stamp = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+const log = (l) => console.log(stamp(), l);
+
+const status = await exec("herdr-app", ["status"], 5000);
+const windowUp = status.code === 0;
+if (windowUp && !args.has("--force")) {
+  log("a Herdr window is open: the idle-reaper mod acts, nothing to do (--force to run anyway)");
+  process.exit(0);
+}
+
+async function focusedTerminal() {
+  if (!windowUp) return null;
+  try {
+    const pane = JSON.parse(status.stdout).focused_pane;
+    const ls = JSON.parse((await exec("herdr-app", ["ls"], 5000)).stdout);
+    for (const sp of ls.spaces ?? []) for (const tab of sp.tabs ?? []) for (const t of tab.terminals ?? []) if (t.pane === pane) return t.terminal;
+  } catch {}
+  return null;
+}
+
+const { cfg, error } = mergeConfig(DEFAULTS, await readText(configPath(appHome, "idle-reaper", process.env.HERDR_MODS_CONFIG_DIR)), null);
+if (error) log(`config/idle-reaper.json ignored: ${error}`);
+if (args.has("--dry-run")) cfg.dry_run = true;
+if (!cfg.enabled) process.exit(0);
+
+const stateFile = join(appHome, "idle-reaper-state.json");
+const io = {
+  home,
+  hc: (a) => exec("hc", a),
+  readText,
+  cwdOf: async (pid) => {
+    if (!pid) return null;
+    try {
+      return await readlink(`/proc/${pid}/cwd`);
+    } catch {}
+    const r = await exec("lsof", ["-a", "-d", "cwd", "-p", String(pid), "-Fn"]); // macOS has no /proc
+    return r.stdout.split("\n").find((l) => l.startsWith("n"))?.slice(1) ?? null;
+  },
+  focusedTerminal,
+  readState: async () => {
+    try {
+      return JSON.parse((await readText(stateFile)) ?? "{}");
+    } catch {
+      return {};
+    }
+  },
+  writeState: async (obj) => {
+    await mkdir(dirname(stateFile), { recursive: true });
+    await writeFile(stateFile, JSON.stringify(obj, null, 1));
+  },
+  sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+  log,
+};
+log(`idle-reaper${cfg.dry_run ? " (dry run)" : ""}${windowUp ? " (--force, window up)" : ""}`);
+await run(cfg, io);

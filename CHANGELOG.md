@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- New `idle-reaper` mod, with `scripts/idle-reaper` to run the same pass from a timer when no window is open.
+- New `tab-tools` mod: hide the tab bar for a one-tab space, move a tab left or right, open the worktree dialogs.
+- `shared/lease.js`: the "only one copy acts" lease, used by `tab-titles` and `idle-reaper`.
+- `tab-titles`: a model request no longer calls `setTimeout` (mods have none); the timeout runs on a mod timer.
+- `tab-titles`: the model endpoint takes a base URL as well as a full URL, and the token can come from `llm_key`,
+  any environment variable (`llm_key_env`), or a file (`llm_key_file`, an env file or a bare token). `llm_auth`
+  selects bearer, none (local servers) or a named header; `llm_headers` and `llm_timeout_ms` are new. Older
+  configs work unchanged. The panel shows the endpoint and model, never the token.
+- `shared/llm.js` and `shared/config.js` are the common model client and config loader, copied into mods by
+  `scripts/sync-shared`. `HERDR_MODS_CONFIG_DIR` moves the config folder.
 - `command-bar`: key bindings written as `{command, args}` (a split with a direction and an agent, say) are
   listed in the palette with the value of their first argument and their keys. `Pane: split right` and
   `Pane: split down` are listed even with no binding at all. Running a row still fills only that first

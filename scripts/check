@@ -7,5 +7,6 @@ fail=0
 for dir in "$here"/mods/*/; do
   herdr-app check "${dir%/}" || fail=1
 done
+"$here"/scripts/sync-shared --check || fail=1
 node --test "$here"/test/*.test.js || fail=1
 exit $fail

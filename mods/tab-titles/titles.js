@@ -12,6 +12,10 @@
 //   - A tab holding two or more agents is left alone unless `multi_agent_titles`
 //     is on, which names it from all their titles with one model request.
 
+import { LLM_DEFAULTS, parseEnvKey, replyContent } from "./llm.js";
+
+export { parseEnvKey };
+
 export const DEFAULTS = {
   enabled: true,
   follow_new_sessions: false,
@@ -19,9 +23,8 @@ export const DEFAULTS = {
   max_length: 40,
   settle_ms: 3000,
   multi_agent_titles: false,
-  llm_model: "openai/gpt-4o-mini",
-  llm_url: "https://openrouter.ai/api/v1/chat/completions",
-  llm_env_file: "",
+  // The model endpoint (llm_url, llm_model, llm_key*, llm_auth, llm_headers, llm_timeout_ms): see llm.js.
+  ...LLM_DEFAULTS,
   llm_retry_ms: 60000,
   // Space-name regexes. Non-empty `only_spaces`: manage only matching spaces.
   // `exclude_spaces`: never manage matching spaces (e.g. ["^telegram"]).
@@ -161,15 +164,8 @@ export function requestBody(model, titles) {
   };
 }
 
-/** The model's tab name from a chat-completions response body, or null. */
-export function parseReply(text) {
-  let value;
-  try {
-    value = JSON.parse(text);
-  } catch {
-    return null;
-  }
-  const content = value?.choices?.[0]?.message?.content;
+/** The tab name in a model's reply text: its first line without quotes or a final full stop, or null. */
+export function nameFromContent(content) {
   if (typeof content !== "string") return null;
   const line = content.split("\n").map((l) => l.trim()).find(Boolean);
   if (!line) return null;
@@ -177,14 +173,7 @@ export function parseReply(text) {
   return name || null;
 }
 
-/** The last `NAME=value` line of an env file (`export NAME=...` and quotes allowed). */
-export function parseEnvKey(text, name) {
-  let found = null;
-  for (const raw of String(text ?? "").split("\n")) {
-    const line = raw.trim().replace(/^export\s+/, "");
-    if (!line.startsWith(`${name}=`)) continue;
-    const v = line.slice(name.length + 1).trim().replace(/^["']|["']$/g, "");
-    if (v) found = v;
-  }
-  return found;
+/** The model's tab name from a chat-completions response body, or null. */
+export function parseReply(text) {
+  return nameFromContent(replyContent(text));
 }

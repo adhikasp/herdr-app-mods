@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Copy shared/*.js into every mod that lists it. Mods are self-contained (a mod folder is linked or copied
+# into the app alone), so shared code is copied, and test/shared.test.js fails when a copy drifts.
+#   scripts/sync-shared           copy
+#   scripts/sync-shared --check   only report drift (exit 1)
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+check=0
+[ "${1:-}" = "--check" ] && check=1
+status=0
+# mod:file pairs, one per line. Add a line when a mod starts using a shared file.
+while read -r mod file; do
+  [ -n "$mod" ] || continue
+  src="$here/shared/$file"; dst="$here/mods/$mod/$file"
+  if [ ! -f "$dst" ] || ! cmp -s "$src" "$dst"; then
+    if [ "$check" = 1 ]; then echo "drift: mods/$mod/$file"; status=1
+    else cp "$src" "$dst"; echo "synced mods/$mod/$file"; fi
+  fi
+done <<'EOF'
+tab-titles llm.js
+tab-titles config.js
+tab-titles lease.js
+idle-reaper config.js
+idle-reaper lease.js
+tab-tools config.js
+EOF
+exit $status
