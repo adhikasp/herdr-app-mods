@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `idle-reaper` on macOS: the shell's folder is found with `lsof` when there is no `/proc` (shared by the mod and
+  the script); `scripts/idle-reaper` adds `~/.local/bin` (`HC_INSTALL_DIR`), Homebrew and `/usr/sbin` to a bare
+  `PATH`, so it runs under launchd and cron; the app home honours `XDG_CONFIG_HOME` (also in `scripts/install`).
+  `contrib/` has a launchd agent and a systemd service and timer.
 - New `idle-reaper` mod, with `scripts/idle-reaper` to run the same pass from a timer when no window is open.
 - New `tab-tools` mod: hide the tab bar for a one-tab space, move a tab left or right, open the worktree dialogs.
 - `shared/lease.js`: the "only one copy acts" lease, used by `tab-titles` and `idle-reaper`.

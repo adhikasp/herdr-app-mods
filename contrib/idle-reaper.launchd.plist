@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- macOS: runs scripts/idle-reaper every 10 minutes while no Herdr window is open (it does nothing while one is).
+     Edit the two /Users/YOU paths (and node's, if it is not Homebrew's), then:
+       cp contrib/idle-reaper.launchd.plist ~/Library/LaunchAgents/dev.herdr-app-mods.idle-reaper.plist
+       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.herdr-app-mods.idle-reaper.plist
+     Log: /tmp/idle-reaper.log. Remove: launchctl bootout gui/$(id -u)/dev.herdr-app-mods.idle-reaper -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>dev.herdr-app-mods.idle-reaper</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/YOU/herdr-app-mods/scripts/idle-reaper</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/YOU</string>
+  </dict>
+  <key>StartInterval</key>
+  <integer>600</integer>
+  <key>StandardOutPath</key>
+  <string>/tmp/idle-reaper.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/idle-reaper.log</string>
+</dict>
+</plist>

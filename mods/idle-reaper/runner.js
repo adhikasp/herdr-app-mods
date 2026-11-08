@@ -17,6 +17,44 @@
 import { IDLE, appFor, plan, describeGroupClose, resumeCommand, typable } from "./reaper.js";
 
 const base = (p) => String(p ?? "").split("/").pop();
+
+/** Whether two folder paths are the same folder (a trailing slash does not matter). */
+export const samePath = (a, b) => Boolean(a && b) && String(a).replace(/\/+$/, "") === String(b).replace(/\/+$/, "");
+
+/** The folder in `lsof -a -d cwd -p PID -Fn` output (`p123`, `fcwd`, `n/the/path` on separate lines), or null. */
+export function parseLsofCwd(text) {
+  const line = String(text ?? "").split("\n").find((l) => l.startsWith("n"));
+  return line && line.length > 1 ? line.slice(1) : null;
+}
+
+/**
+ * A process's current folder. Linux has /proc; macOS has none, so it asks lsof (/usr/sbin, which a launchd job's
+ * PATH may not list). `exec(cmd, args)` resolves `{code, stdout}`. Null when neither works: the caller then does
+ * not park, because it cannot tell whether the shell is in the agent's folder.
+ */
+export function makeCwdOf(exec) {
+  return async (pid) => {
+    if (!pid) return null;
+    try {
+      const r = await exec("readlink", ["-f", `/proc/${pid}/cwd`]);
+      if (r.code === 0 && r.stdout.trim()) return r.stdout.trim();
+    } catch {}
+    for (const lsof of ["lsof", "/usr/sbin/lsof"]) {
+      try {
+        const r = await exec(lsof, ["-a", "-d", "cwd", "-p", String(pid), "-Fn"]);
+        const cwd = r.code === 0 ? parseLsofCwd(r.stdout) : null;
+        if (cwd) return cwd;
+      } catch {}
+    }
+    return null;
+  };
+}
+
+/** `path` with these folders added at the front when they are missing (a launchd or cron job starts with a bare PATH). */
+export function augmentPath(path, folders) {
+  const have = String(path ?? "").split(":").filter(Boolean);
+  return [...folders.filter((f) => f && !have.includes(f)), ...have].join(":");
+}
 const expand = (p, home) => (p.startsWith("~/") ? `${home}/${p.slice(2)}` : p);
 
 async function hcJson(io, args) {
@@ -89,7 +127,7 @@ async function park(cfg, t, io) {
   if (t.argv0 === first || t.argv0 === "env") return null; // the terminal runs the agent itself: no shell to land in
   if (!typable(cmd)) return null;
   const shellCwd = await io.cwdOf(t.shell_pid);
-  if (!shellCwd || shellCwd !== t.cwd) {
+  if (!samePath(shellCwd, t.cwd)) {
     io.log(`${t.key} not parked: shell is in ${shellCwd ?? "?"}, agent in ${t.cwd} (hc keys can't type a cd)`);
     return null;
   }

@@ -14,7 +14,7 @@ import { appHome, exec, focused, hc, home, placement, props, readTextFile, setSh
 import { configPath, mergeConfig } from "./config.js";
 import { Lease } from "./lease.js";
 import { DEFAULTS } from "./reaper.js";
-import { run } from "./runner.js";
+import { makeCwdOf, run } from "./runner.js";
 
 const TICK_MS = 30000;
 const FIRST_RUN_MS = 60000; // let statuses settle after the app starts
@@ -76,19 +76,10 @@ export default class IdleReaper extends View {
         }
       },
       readText: (p) => readTextFile(p),
-      cwdOf: async (pid) => {
-        if (!pid) return null;
-        try {
-          const r = await exec("readlink", ["-f", `/proc/${pid}/cwd`]);
-          if (r.code === 0 && r.stdout.trim()) return r.stdout.trim();
-        } catch {}
-        try {
-          const r = await exec("lsof", ["-a", "-d", "cwd", "-p", String(pid), "-Fn"]); // macOS has no /proc
-          return r.stdout.split("\n").find((l) => l.startsWith("n"))?.slice(1) ?? null;
-        } catch {
-          return null;
-        }
-      },
+      cwdOf: makeCwdOf(async (cmd, args) => {
+        const r = await exec(cmd, args);
+        return { code: r.code, stdout: r.stdout };
+      }),
       focusedTerminal: async () => focused()?.terminal ?? null,
       readState: async () => {
         this.stateText = await readTextFile(stateFile);

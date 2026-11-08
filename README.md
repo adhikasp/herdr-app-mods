@@ -183,8 +183,15 @@ template, and where the session id lives (a JSON file, or a terminal label). Cla
 add yours with a few lines of JSON.
 
 **Works with the window closed.** A mod only runs while the app window is open, so `scripts/idle-reaper` runs the
-*same code* from a systemd timer or cron for the rest of the time (`--dry-run`, `--force`). It does nothing while a
-window is up, so the two never act together, and they share one state file.
+*same code* from a timer for the rest of the time (`--dry-run`, `--force`). It needs `node`, does nothing while a
+window is up, so the two never act together, and they share one state file. Ready-made timers are in
+[`contrib/`](contrib): a systemd service and timer, and a launchd agent for macOS.
+
+**On macOS.** The mod runs as is. Behind the scenes: macOS has no `/proc`, so the shell's folder comes from `lsof`
+(`/usr/sbin/lsof`, shipped with the system); the timer script adds `~/.local/bin` (where Herdr links `hc` and
+`herdr-app`) and Homebrew's folders to the bare `PATH` launchd gives it; and the app home is `~/.config/herdr-app`
+there too (`XDG_CONFIG_HOME` and `HERDR_APP_HOME` are honoured). Agent folders are compared as real paths, so a trailing
+slash does not matter.
 
 <details>
 <summary><code>config/idle-reaper.json</code></summary>
@@ -247,8 +254,9 @@ scripts/check       # herdr-app check on every mod, then the tests
 scripts/sync-shared # copy shared/*.js into the mods that use them
 ```
 
-Developed and used daily on Linux. The mods are plain JavaScript on the app's mod API, and `idle-reaper` falls back
-to `lsof` where there is no `/proc`, but macOS and Windows are untested. Issues and pull requests welcome.
+Developed and used daily on Linux. The mods are plain JavaScript on the app's mod API. `idle-reaper` has been
+reviewed for macOS (see above) and its macOS paths are covered by tests with a faked system, but it has not been run
+on a Mac; Windows is untested. Issues and pull requests welcome.
 
 ## Coming from the terminal UI?
 

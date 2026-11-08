@@ -4,11 +4,11 @@
 #   scripts/install --copy        copy instead of linking
 #   scripts/install --uninstall   remove what this script installed
 #   scripts/install command-bar   only the named mods
-# The app home is $HERDR_APP_HOME, else ~/.config/herdr-app.
+# The app home is $HERDR_APP_HOME, else $XDG_CONFIG_HOME/herdr-app, else ~/.config/herdr-app (macOS too).
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-home="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
+home="${HERDR_APP_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/herdr-app}"
 mode=link
 names=()
 for arg in "$@"; do

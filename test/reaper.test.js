@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULTS, appFor, plan, typable, resumeCommand } from "../mods/idle-reaper/reaper.js";
-import { run } from "../mods/idle-reaper/runner.js";
+import { augmentPath, makeCwdOf, parseLsofCwd, run, samePath } from "../mods/idle-reaper/runner.js";
 import { Lease } from "../shared/lease.js";
 import { barCommand, findNode, moveTab, parseCommand } from "../mods/tab-tools/tools.js";
 
@@ -166,4 +166,55 @@ test("tab-tools: bar hides for a lone tab, tabs move relative, commands parse", 
   assert.deepEqual(parseCommand("worktree:open"), { kind: "worktree", action: "open" });
   assert.equal(parseCommand("nope"), null);
   assert.equal(findNode({ id: "r", children: [{ id: "x", children: [{ id: "tabs" }] }] }, "tabs").id, "tabs");
+});
+
+// ---- macOS: no /proc, lsof for the shell's folder, a bare launchd PATH
+test("parseLsofCwd reads the n field of lsof -F output", () => {
+  assert.equal(parseLsofCwd("p4242\nfcwd\nn/Users/dev/my proj\n"), "/Users/dev/my proj");
+  assert.equal(parseLsofCwd("p4242\nfcwd\n"), null);
+  assert.equal(parseLsofCwd("p4242\nfcwd\nn\n"), null);
+  assert.equal(parseLsofCwd(""), null);
+});
+
+test("makeCwdOf: /proc where there is one, lsof (also by absolute path) where there is not, null otherwise", async () => {
+  const linux = makeCwdOf(async (cmd) => (cmd === "readlink" ? { code: 0, stdout: "/home/u/p\n" } : { code: 1, stdout: "" }));
+  assert.equal(await linux(7), "/home/u/p");
+  const calls = [];
+  const mac = makeCwdOf(async (cmd, args) => {
+    calls.push(cmd);
+    if (cmd === "readlink") return { code: 1, stdout: "" }; // BSD readlink -f on a path that does not exist
+    if (cmd === "lsof") throw new Error("ENOENT"); // launchd PATH has no /usr/sbin
+    return { code: 0, stdout: `p${args[3]}\nfcwd\nn/Users/u/p\n` };
+  });
+  assert.equal(await mac(7), "/Users/u/p");
+  assert.deepEqual(calls, ["readlink", "lsof", "/usr/sbin/lsof"]);
+  assert.equal(await makeCwdOf(async () => ({ code: 1, stdout: "" }))(7), null);
+  assert.equal(await makeCwdOf(async () => { throw new Error("x"); })(7), null);
+  assert.equal(await mac(0), null);
+});
+
+test("samePath ignores a trailing slash, nothing else", () => {
+  assert.ok(samePath("/Users/u/p/", "/Users/u/p"));
+  assert.ok(!samePath("/Users/u/p", "/Users/u/q"));
+  assert.ok(!samePath(null, null));
+});
+
+test("augmentPath puts the folders hc lives in first, once", () => {
+  assert.equal(augmentPath("/usr/bin:/bin", ["/Users/u/.local/bin", undefined, "/usr/bin"]), "/Users/u/.local/bin:/usr/bin:/bin");
+  assert.equal(augmentPath(undefined, ["/a"]), "/a");
+});
+
+test("runner parks a macOS-shaped terminal: zsh under a node-run agent, shell folder found through lsof", async () => {
+  const mac = claude("t1", { argv: ["/bin/zsh"], foreground: { name: "node", cwd: "/Users/u/p", pid: 99 }, cwd: "/Users/u/p" });
+  const io = fakeIo([mac], { shellCwd: "/Users/u/p/" }); // lsof may add or drop a trailing slash
+  const lines = await run({ ...cfg }, io, NOW);
+  assert.match(lines.join("\n"), /park t1/);
+  assert.ok(io.calls.includes("send t1 /exit"));
+});
+
+test("runner does not park when the shell's folder cannot be found at all", async () => {
+  const io = fakeIo([claude("t1")]);
+  io.cwdOf = async () => null;
+  await run({ ...cfg }, io, NOW);
+  assert.ok(!io.calls.some((c) => c.startsWith("send ")));
 });

@@ -1,0 +1,11 @@
+# Linux: copy to ~/.config/systemd/user/ with idle-reaper.timer, fix the path, then
+#   systemctl --user daemon-reload && systemctl --user enable --now idle-reaper.timer
+# Runs scripts/idle-reaper, which does nothing while a Herdr window is open (the mod acts then).
+[Unit]
+Description=Idle-reaper pass for Herdr agents while no Herdr window is open
+
+[Service]
+Type=oneshot
+ExecStart=%h/herdr-app-mods/scripts/idle-reaper
+# node must be on PATH; add your version manager's shims if it is not in /usr/bin
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
