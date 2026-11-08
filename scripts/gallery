@@ -85,7 +85,9 @@ shoot_idle_reaper()  { do_ space.select --id "$(space_id docs-site)" >/dev/null;
 shoot_tab_tools()    { do_ space.select --id "$(space_id infra)" >/dev/null; frame "$shot_dir/tab-tools/preview.png"; }
 
 down() {
-  do_ app.quit >/dev/null 2>&1 || true; sleep 1
+  do_ app.quit >/dev/null 2>&1 || true; sleep 2
+  # if the window outlived app.quit, close the demo window itself (matched by its own app id, never yours)
+  hyprctl clients -j | jq -r '.[]|select(.class=="herdr-gallery")|.pid' | xargs -r kill 2>/dev/null || true
   for t in $(hc ls --all | jq -r '.terminals[].address' 2>/dev/null); do hc kill "$t" >/dev/null 2>&1 || true; hc rm "$t" >/dev/null 2>&1 || true; done
   hc server stop >/dev/null 2>&1 || true
   rm -rf "$HERDR_APP_HOME" "$work"
